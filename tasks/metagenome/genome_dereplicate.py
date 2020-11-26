@@ -36,7 +36,7 @@ def run_cmd(cmd):
 	return output
 
 def condition_based_derep(input_file,ref_cond,cont_cond):
-	df = pd.read_table(input_file, sep='\t+', engine='python')
+	df = pd.read_table(input_file, sep='\t+', engine='python',header=None)
 	df[1:]
 	df.columns = ['samples', 'conditions']
 	df1 = df[["samples", "conditions"]]
