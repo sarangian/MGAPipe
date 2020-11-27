@@ -108,7 +108,7 @@ class enrichBins(luigi.Task):
 		df1.columns = ['bin_names']
 		df1['samples'] = df1['bin_names'].str.split('_').str[0]
 	
-		df2=pd.read_csv(sample_group_file, sep='\t+', engine='python')
+		df2=pd.read_csv(sample_group_file, sep='\t+', engine='python',header=None)
 		df2.columns=['samples', 'conditions']
 	
 		outer_join = pd.merge(df1,  df2,  on='samples', how ='outer')
