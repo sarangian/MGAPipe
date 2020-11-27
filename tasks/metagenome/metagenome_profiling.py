@@ -305,7 +305,7 @@ class graphlan(luigi.Task):
 
 		print("****NOW RUNNING COMMAND****:" + cmd_run_graphlan)
 		print(run_cmd(cmd_run_graphlan))
-		subprocess.run('conda deactivate graphlan', shell=True)
+		#subprocess.run('conda deactivate graphlan', shell=True)
 		
 
 class profileTaxonomy(luigi.Task):
@@ -315,7 +315,8 @@ class profileTaxonomy(luigi.Task):
 	max_memory = GlobalParameter().maxMemory
 	pre_process_reads = luigi.ChoiceParameter(choices=["yes", "no"], var_type=str)
 	read_library_type = GlobalParameter().seq_platforms
-	condition_column=luigi.Parameter()
+	condition_column=luigi.Parameter(default="conditions")
+	reference_condition=luigi.Parameter()
 	alpha=luigi.FloatParameter(default=0.05)
 
 
@@ -336,10 +337,12 @@ class profileTaxonomy(luigi.Task):
 						"phyloseq.r -t {map_file} " \
 						"-P {inDir}/otu_table_phyloseq.biom " \
 						"-v {condition_column} " \
+						"-c {reference_condition} " \
 						"-a {alpha} " \
 						"-A {inDir}/otu_table_ampvis2.txt".format(map_file=map_file,
 																 inDir=inDir,
 																 alpha=self.alpha,
+																 reference_condition=self.reference_condition,
 																 phyloseq_folder=phyloseq_folder,
 																 condition_column=self.condition_column)
 		print("****NOW RUNNING COMMAND****:" + cmd_run_phyloseq)
