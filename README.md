@@ -267,31 +267,30 @@ Usage:  projectConfig.py -h
                         pac:  pacbio
                         ]
 
+.. code-block:: none
 
-**Output**
+Successful run of the projectConfig.py script with appropriate parameters will generate 
 
-|   Successful run of the projectConfig.py script with appropriate parameters will generate 
-|
-|   1. Luigi Configuration file ``luigi.cfg`` in the parent folder
-|       
-|      Edit the luigi.cfg file if required.
-|      
-|      Note:
-|      It is mandatory to provide the path of the adapter file (default location: /tasks/utility/adapter.fastq.gz)
-|
-|   2. a project folder in the name of ``metagenome_demo_analysis`` will be generated
-|
-|   3. a configuration folder in the name of config containing 3 files   
-|
-|      a. metagenome_condition.tsv
-|      b. metagenome_group.tsv
-|      b. pe_samples.lst
-|      c. samples.txt
-|   4. A folder named ``metagenome_symlink`` (provided as parameter to --symLinkDir) will be created which contains the symbolic links to the read files present in the inputData (/home/sutripa/Documents/scriptome_metaphlan/data) folder
-|
-|   The ``metagenome_condition.tsv`` file contains the sample names with their associated environmental conditions, which will be used for condition based genome binning and differential enrichment analysis. Kindly check the generated files and modify if required
-|  
-|
+   1. Luigi Configuration file ``luigi.cfg`` in the parent folder
+       
+      Edit the luigi.cfg file if required.
+      
+      Note:
+      It is mandatory to provide the path of the adapter file (default location: /tasks/utility/adapter.fastq.gz)
+
+  2. a project folder in the name of ``metagenome_demo_analysis`` will be generated
+
+   3. a configuration folder in the name of config containing 3 files   
+
+      a. metagenome_condition.tsv
+      b. metagenome_group.tsv
+      b. pe_samples.lst
+      c. samples.txt
+   4. A folder named ``metagenome_symlink`` (provided as parameter to --symLinkDir) will be created which contains the symbolic links to the read files present in   the inputData (/home/sutripa/Documents/scriptome_metaphlan/data) folder
+
+   The ``metagenome_condition.tsv`` file contains the sample names with their associated environmental conditions, which will be used for condition based genome binning and differential enrichment analysis. Kindly check the generated files and modify if required
+  
+
 
 
 
