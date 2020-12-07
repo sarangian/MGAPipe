@@ -36,7 +36,7 @@ def run_cmd(cmd):
 	return output
 
 def condition_based_derep(input_file,ref_cond,cont_cond):
-	df = pd.read_table(input_file, sep='\t+', engine='python',header=None)
+	df = pd.read_table(input_file, sep='\t+', engine='python',header=None,index_col=False)
 	df[1:]
 	df.columns = ['samples', 'conditions']
 	df1 = df[["samples", "conditions"]]
@@ -115,10 +115,11 @@ def condition_based_derep(input_file,ref_cond,cont_cond):
 
 
 
-def condition_free_derep(input_file,ref_cond,cont_cond):
+#def condition_free_derep(input_file,ref_cond,cont_cond):
+def condition_free_derep(input_file):
 
-	reference_condition=ref_cond
-	contrast_condition=cont_cond
+	#reference_condition=ref_cond
+	#contrast_condition=cont_cond
 
 
 	destPath=os.path.join(os.getcwd(), GlobalParameter().projectName,"dRep_bins", "input_bins_cond_free")
@@ -150,9 +151,9 @@ class conditionBasedDeRep(luigi.Task):
 	read_library_type = GlobalParameter().seq_platforms
 	min_contig_length=luigi.IntParameter(default="1500")
 	min_genome_length=luigi.IntParameter(default="50000")
-	completeness=luigi.IntParameter(default="75")
-	contamination=luigi.IntParameter(default="25")
-	checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",choices=["taxonomy_wf", "lineage_wf"], var_type=str)
+	completeness=luigi.IntParameter(default="75",description='bin completeness [default:75]')
+	contamination=luigi.IntParameter(default="25",description='accepted contamination [default:25]')
+	checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",description='checkm workflow method ["taxonomy_wf", "lineage_wf"], default "taxonomy_wf"',choices=["taxonomy_wf", "lineage_wf"], var_type=str)
 	reference_condition=luigi.Parameter()
 	contrast_condition=luigi.Parameter()
 
@@ -192,6 +193,22 @@ class conditionBasedDeRep(luigi.Task):
 		dRep_con_cond_out_folder=os.path.join(os.getcwd(),GlobalParameter().projectName,"dRep_bins", self.contrast_condition +"_dReplicated"+"/")
 
 
+		cmd_dRep_reference="dRep dereplicate {dRep_ref_cond_out_folder} " \
+					   "-g {reference_dRep_path}/*.fa " \
+					   "--checkM_method {checkM_method} " \
+					   "-p {threads}".format(checkM_method=self.checkM_method,threads=self.threads,
+											 dRep_ref_cond_out_folder=dRep_ref_cond_out_folder,
+											 reference_dRep_path=reference_dRep_path)
+
+
+		cmd_dRep_contrast="dRep dereplicate {dRep_con_cond_out_folder} " \
+					   "-g {contrast_dRep_path}/*.fa " \
+					   "--checkM_method {checkM_method} " \
+					   "-p {threads}".format(dRep_con_cond_out_folder=dRep_con_cond_out_folder, 
+											checkM_method=self.checkM_method,threads=self.threads,
+											contrast_dRep_path=contrast_dRep_path)	
+
+		'''
 		cmd_dRep_reference="[ -d  {dRep_ref_cond_out_folder} ] || mkdir -p {dRep_ref_cond_out_folder}; " \
 					   "dRep dereplicate {dRep_ref_cond_out_folder} " \
 					   "-g {reference_dRep_path}/*.fa " \
@@ -207,7 +224,8 @@ class conditionBasedDeRep(luigi.Task):
 					   "--checkM_method {checkM_method} " \
 					   "-p {threads}".format(dRep_con_cond_out_folder=dRep_con_cond_out_folder, 
 											checkM_method=self.checkM_method,threads=self.threads,
-											contrast_dRep_path=contrast_dRep_path)	
+											contrast_dRep_path=contrast_dRep_path)
+		'''
 
 		
 		merged_bin_folder=os.path.join(os.getcwd(), GlobalParameter().projectName ,"dRep_bins","dReplicated_bins_condition_based"+"/")
@@ -248,11 +266,12 @@ class conditionFreeDeRep(luigi.Task):
 	read_library_type = GlobalParameter().seq_platforms
 	min_contig_length=luigi.IntParameter(default="1500")
 	min_genome_length=luigi.IntParameter(default="50000")
-	completeness=luigi.IntParameter(default="75")
-	contamination=luigi.IntParameter(default="25")
-	checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",choices=["taxonomy_wf", "lineage_wf"], var_type=str)
-	reference_condition=luigi.Parameter()
-	contrast_condition=luigi.Parameter()
+	completeness=luigi.IntParameter(default="75",description='bin completeness [default:75]')
+	contamination=luigi.IntParameter(default="25",description='accepted contamination [default:25]')
+	checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",description='checkm workflow method ["taxonomy_wf", "lineage_wf"], default "taxonomy_wf"',choices=["taxonomy_wf", "lineage_wf"], var_type=str)
+
+	#reference_condition=luigi.Parameter()
+	#contrast_condition=luigi.Parameter()
 	
 
 	def requires(self):
@@ -271,7 +290,9 @@ class conditionFreeDeRep(luigi.Task):
 	def run(self):
 
 		sample_file=os.path.join(os.getcwd(), "config","pe_samples.lst")
-		condition_free_derep(sample_file,self.reference_condition,self.contrast_condition)
+		#condition_free_derep(sample_file,self.reference_condition,self.contrast_condition)
+		condition_free_derep(sample_file)
+
 
 
 		dReplicated_bins_condition_free=os.path.join(os.getcwd(),GlobalParameter().projectName,"dRep_bins","dReplicated_bins_condition_free"+"/")
@@ -280,13 +301,13 @@ class conditionFreeDeRep(luigi.Task):
 
 
 		cmd_dRep="[ -d  {dReplicated_bins_condition_free} ] || mkdir -p {dReplicated_bins_condition_free}; " \
-					   "dRep dereplicate {dReplicated_bins_condition_free} " \
-					   "-g {dReplicated_bins_input}/*.fa " \
-					   "--checkM_method {checkM_method} " \
-					   "-p {threads}".format(checkM_method=self.checkM_method,
-											 threads=self.threads,
-											 dReplicated_bins_condition_free=dReplicated_bins_condition_free,
-											 dReplicated_bins_input=dReplicated_bins_input)
+					 "dRep dereplicate {dReplicated_bins_condition_free} " \
+					 "-g {dReplicated_bins_input}/*.fa " \
+					 "--checkM_method {checkM_method} " \
+					 "-p {threads}".format(checkM_method=self.checkM_method,
+											threads=self.threads,
+											dReplicated_bins_condition_free=dReplicated_bins_condition_free,
+											dReplicated_bins_input=dReplicated_bins_input)
 
 
 		print("****** NOW RUNNING COMMAND ******: " + cmd_dRep)
@@ -311,12 +332,13 @@ class dRepBins(luigi.Task):
 	read_library_type = GlobalParameter().seq_platforms
 	min_contig_length=luigi.IntParameter(default="1500")
 	min_genome_length=luigi.IntParameter(default="50000")
-	completeness=luigi.IntParameter(default="75")
-	contamination=luigi.IntParameter(default="25")
-	checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",choices=["taxonomy_wf", "lineage_wf"], var_type=str)
-	dRep_method=luigi.ChoiceParameter(default="condition_based",choices=["condition_based", "condition_free"], var_type=str)
-	reference_condition=luigi.Parameter()
-	contrast_condition=luigi.Parameter()
+	completeness=luigi.IntParameter(default="75",description='bin completeness [int, default:75]')
+	contamination=luigi.IntParameter(default="25",description='accepted contamination [int, default:25]')
+	checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",description='checkm workflow method ["taxonomy_wf", "lineage_wf"], default "taxonomy_wf"',choices=["taxonomy_wf", "lineage_wf"], var_type=str)
+	
+	dRep_method=luigi.ChoiceParameter(default="condition_based",choices=["condition_based", "condition_free"], description='Mandatory Parameter. de-replication method ["condition_based", "condition_based"]',var_type=str)
+	reference_condition=luigi.Parameter(default="")
+	contrast_condition=luigi.Parameter(default="",description="Optional parameter for condition_free, mandatory for condition_based")
 
 
 	def requires(self):
@@ -330,13 +352,19 @@ class dRepBins(luigi.Task):
 										contamination=self.contamination)]
 		if self.dRep_method=="condition_free":
 			return [conditionFreeDeRep(pre_process_reads=self.pre_process_reads,
+										checkM_method=self.checkM_method,
+					   			  		min_contig_length=self.min_contig_length,
+									 	completeness=self.completeness,
+										contamination=self.contamination)]
+			'''
+			return [conditionFreeDeRep(pre_process_reads=self.pre_process_reads,
 										contrast_condition=self.contrast_condition,
 										checkM_method=self.checkM_method,
 										reference_condition=self.reference_condition,
 					   			  		min_contig_length=self.min_contig_length,
 									 	completeness=self.completeness,
 										contamination=self.contamination)]
-
+			'''
 
 	def output(self):
 		timestamp = time.strftime('%Y%m%d.%H%M%S', time.localtime())

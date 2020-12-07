@@ -34,18 +34,18 @@ class singleSampleAssembly(luigi.Task):
     max_memory = GlobalParameter().maxMemory
     pre_process_reads = luigi.ChoiceParameter(choices=["yes", "no"], var_type=str)
     read_library_type = GlobalParameter().seq_platforms
-    min_contig_length=luigi.IntParameter(default="1500")
+    min_contig_length=luigi.IntParameter(default="1500",description="Minimum Contig lenghth. (int[Default: 1500])")
     sampleName = luigi.Parameter(description="name of the sample to be analyzed. (string)")
 
     def requires(self):
         if self.read_library_type == "pe" and self.pre_process_reads=="yes":
-            return [cleanFastq(seq_platforms="pe",sampleName=i)
+            return [cleanFastq(sampleName=i)
                 for i in [line.strip()
                           for line in
                           open((os.path.join(os.getcwd(), "config", "pe_samples.lst")))]]
 
         if self.read_library_type == "pe" and self.pre_process_reads=="no":
-            return [reformat(seq_platforms="pe",sampleName=i)
+            return [reformat(sampleName=i)
                 for i in [line.strip()
                           for line in
                           open((os.path.join(os.getcwd(), "config", "pe_samples.lst")))]]
@@ -53,11 +53,11 @@ class singleSampleAssembly(luigi.Task):
         #Paired-end with Pacbio
         if self.read_library_type == "pe-pac" and self.pre_process_reads == "yes":
             return [
-                        [cleanFastq(seq_platforms="pe", sampleName=i)
+                        [cleanFastq(sampleName=i)
                             for i in [line.strip() for line in
                                 open((os.path.join(os.getcwd(), "config", "pe_samples.lst")))]],
 
-                        [filtlong(seq_platforms="pac",sampleName=i)
+                        [filtlong(sampleName=i)
                             for i in [line.strip() for line in
                                 open((os.path.join(os.getcwd(), "config", "pac_samples.lst")))]]
                     ]
@@ -65,13 +65,13 @@ class singleSampleAssembly(luigi.Task):
 
         if self.read_library_type == "pe-pac" and self.pre_process_reads == "no":
             return [
-                        [reformat(seq_platforms="pe", sampleName=i)
+                        [reformat(sampleName=i)
                             for i in [line.strip() for line in
-                                open((os.path.join(os.getcwd(), "sample_list", "pe_samples.lst")))]],
+                                open((os.path.join(os.getcwd(), "config", "pe_samples.lst")))]],
 
-                        [reformat(seq_platforms="pac",sampleName=i)
+                        [reformat(sampleName=i)
                             for i in [line.strip()for line in
-                                open((os.path.join(os.getcwd(), "sample_list", "pac_samples.lst")))]]
+                                open((os.path.join(os.getcwd(), "config", "pac_samples.lst")))]]
                     ]
 
        
@@ -139,7 +139,7 @@ class metagenomeAssembly(luigi.Task):
     max_memory = GlobalParameter().maxMemory
     pre_process_reads = luigi.ChoiceParameter(choices=["yes", "no"], var_type=str)
     read_library_type = GlobalParameter().seq_platforms
-    min_contig_length=luigi.IntParameter(default="1500")
+    min_contig_length=luigi.IntParameter(default="1500",description="Minimum Contig lenghth. (int[Default: 1500])")
 
     def requires(self):
 

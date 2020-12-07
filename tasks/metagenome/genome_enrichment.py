@@ -46,7 +46,7 @@ class enrichBins(luigi.Task):
 	checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",choices=["taxonomy_wf", "lineage_wf"], var_type=str)
 	read_library_type = GlobalParameter().seq_platforms
 	min_contig_length=luigi.IntParameter(default="1500")
-	completeness=luigi.IntParameter(default="50")
+	completeness=luigi.IntParameter(default="75")
 	contamination=luigi.IntParameter(default="25")
 	reference_condition=luigi.Parameter()
 	contrast_condition=luigi.Parameter()
@@ -133,7 +133,7 @@ class enrichBins(luigi.Task):
 		
 
 #############################################################################################################################
-class differentialEnrichmentAnalysis(luigi.Task):
+class deaGenomeBins(luigi.Task):
 	project_name=GlobalParameter().projectName
 	adapter = GlobalParameter().adapter
 	threads = GlobalParameter().threads
@@ -142,7 +142,7 @@ class differentialEnrichmentAnalysis(luigi.Task):
 	checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",choices=["taxonomy_wf", "lineage_wf"], var_type=str)
 	read_library_type = GlobalParameter().seq_platforms
 	min_contig_length=luigi.IntParameter(default="1500")
-	completeness=luigi.IntParameter(default="50")
+	completeness=luigi.IntParameter(default="75")
 	contamination=luigi.IntParameter(default="25")
 	reference_condition=luigi.Parameter()
 	contrast_condition=luigi.Parameter()
@@ -187,11 +187,8 @@ class differentialEnrichmentAnalysis(luigi.Task):
 		enrichm_pfam_output = os.path.join(os.getcwd(), GlobalParameter().projectName, "bin_enrichment_analysis", "enrichm_enrichment_pfam_out" + "/")
 		enrichm_cazy_output = os.path.join(os.getcwd(), GlobalParameter().projectName, "bin_enrichment_analysis", "enrichm_enrichment_cazy_out" + "/")
 		enrichm_tigrfam_output = os.path.join(os.getcwd(), GlobalParameter().projectName, "bin_enrichment_analysis", "enrichm_enrichment_tigrfam_out" + "/")
-
 		
 		# enrichm enrichment --annotate_output enrichm_annotate_out/ --metadata metadata.txt --processes 8 --pfam --output enrichm_enrichment_pfam_out
-
-
 		cmd_run_ko_enrichment="enrichm enrichment --annotate_output {enrichm_annotate_out} " \
 				   "--output {enrichm_ko_output} --log {enrichm_ko_output}/ko_enrichment.log --verbosity 5 "  \
 				   "--ko --pval_cutoff {pvalcutoff} --multi_test_correction {correction} " \

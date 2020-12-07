@@ -52,14 +52,14 @@ class prokka(luigi.Task):
 	pre_process_reads = luigi.ChoiceParameter(choices=["yes", "no"], var_type=str)
 	read_library_type = GlobalParameter().seq_platforms
 	min_contig_length=luigi.IntParameter(default="1500")
-	min_genome_length=luigi.IntParameter(default="50000")
-	completeness=luigi.IntParameter(default="75")
-	contamination=luigi.IntParameter(default="25")
-	checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",choices=["taxonomy_wf", "lineage_wf"], var_type=str)
+	#min_genome_length=luigi.IntParameter(default="50000")
+	#completeness=luigi.IntParameter(default="75")
+	#contamination=luigi.IntParameter(default="25")
+	#checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",choices=["taxonomy_wf", "lineage_wf"], var_type=str)
 	dRep_method=luigi.ChoiceParameter(choices=["condition_based", "condition_free"], var_type=str)
 	genomeName=luigi.Parameter()
-	reference_condition=luigi.Parameter()
-	contrast_condition=luigi.Parameter()
+	#reference_condition=luigi.Parameter()
+	#contrast_condition=luigi.Parameter()
 	'''
 	def requires(self):
 		if self.dRep_method=="condition_based":
@@ -121,10 +121,12 @@ class prokka(luigi.Task):
 				   "--outdir {outDir} "  \
 				   "--prefix {bin_name} " \
 				   "--metagenome " \
+				   "--rfam " \
+				   "--mincontiglen {min_contig_length} " \
 				   "--kingdom Bacteria " \
 				   "--locustag PROKKA " \
 				   "--cpus {threads}  --force ".format(binDir=binDir,
-				   	genomeName=self.genomeName, 
+				   	genomeName=self.genomeName, min_contig_length=self.min_contig_length,
 				   	outDir=outDir, 
 				   	bin_name=bin_name,
 				   	threads=GlobalParameter().threads)
@@ -152,14 +154,14 @@ class annotateGenomeBins(luigi.Task):
 	max_memory = GlobalParameter().maxMemory
 	pre_process_reads = luigi.ChoiceParameter(choices=["yes", "no"], var_type=str)
 	read_library_type = GlobalParameter().seq_platforms
-	min_contig_length=luigi.IntParameter(default="1500")
-	min_genome_length=luigi.IntParameter(default="50000")
-	completeness=luigi.IntParameter(default="75")
-	contamination=luigi.IntParameter(default="25")
-	checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",choices=["taxonomy_wf", "lineage_wf"], var_type=str)
+	min_contig_length=luigi.IntParameter(default="200")
+	#min_genome_length=luigi.IntParameter(default="50000")
+	#completeness=luigi.IntParameter(default="75")
+	#contamination=luigi.IntParameter(default="25")
+	#checkM_method=luigi.ChoiceParameter(default="taxonomy_wf",choices=["taxonomy_wf", "lineage_wf"], var_type=str)
 	dRep_method=luigi.ChoiceParameter(choices=["condition_based", "condition_free"], var_type=str)
-	reference_condition=luigi.Parameter()
-	contrast_condition=luigi.Parameter()
+	#reference_condition=luigi.Parameter()
+	#contrast_condition=luigi.Parameter()
 
 
 
@@ -181,7 +183,7 @@ class annotateGenomeBins(luigi.Task):
 			create_list="touch {genome_list}".format(genome_list=genome_list)
 			print(run_cmd(create_list))
 
-		'''
+		
 		if self.dRep_method=="condition_based":
 			return [
 
@@ -211,7 +213,25 @@ class annotateGenomeBins(luigi.Task):
 					for i in [line.strip()
 							  for line in
 							  open((os.path.join(os.getcwd(),GlobalParameter().projectName,"dRep_bins", "genomes_dRep_regardless_condition.lst")))]]]
-		
+		'''
+		if self.dRep_method=="condition_based":
+			return[prokka(dRep_method=self.dRep_method,
+					   pre_process_reads=self.pre_process_reads,		   
+					   min_contig_length=self.min_contig_length,
+						genomeName=i)
+						for i in [line.strip()
+							  for line in
+							  open((os.path.join(os.getcwd(),GlobalParameter().projectName ,"dRep_bins", "genomes_dRep_by_condition.lst")))]]
+
+		if self.dRep_method=="condition_free":
+
+			return[prokka(dRep_method=self.dRep_method,
+					   pre_process_reads=self.pre_process_reads,
+					   min_contig_length=self.min_contig_length,
+					   genomeName=i)
+					for i in [line.strip()
+							  for line in
+							  open((os.path.join(os.getcwd(),GlobalParameter().projectName,"dRep_bins", "genomes_dRep_regardless_condition.lst")))]]
 	def output(self):
 		timestamp = time.strftime('%Y%m%d.%H%M%S', time.localtime())
 		return luigi.LocalTarget(os.path.join(os.getcwd(),"task_logs",'task.genome.dereplication.complete.{t}'.format(

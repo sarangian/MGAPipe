@@ -214,7 +214,7 @@ class genomeBinning(luigi.Task):
 
 				cmd_signal="cd {genome_bin_folder}; " \
 						   "touch .finished.txt".format(genome_bin_folder=genome_bin_folder)
-
+				print("****** NOW RUNNING COMMAND ******: " + cmd_signal)		   	
 				print (run_cmd(cmd_signal))
 
 
