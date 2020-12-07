@@ -55,13 +55,13 @@ class metaphlan(luigi.Task):
 
 	def requires(self):
 		if self.read_library_type == "pe" and self.pre_process_reads=="yes":
-			return [cleanFastq(seq_platforms="pe",sampleName=i)
+			return [cleanFastq(sampleName=i)
 				for i in [line.strip()
 						  for line in
 						  open((os.path.join(os.getcwd(), "config", "pe_samples.lst")))]]
 
 		if self.read_library_type == "pe" and self.pre_process_reads=="no":
-			return [reformat(seq_platforms="pe",sampleName=i)
+			return [reformat(sampleName=i)
 				for i in [line.strip()
 						  for line in
 						  open((os.path.join(os.getcwd(), "config", "pe_samples.lst")))]]
@@ -154,10 +154,8 @@ class graphlan(luigi.Task):
 		graphlan_folder = os.path.join(os.getcwd(), GlobalParameter().projectName, "metaphlan_analysis" ,"figures" + "/")
 
 		return {'out1': luigi.LocalTarget(outDir + "/" + "merged_abundance_table.txt"),
-				'out2': luigi.LocalTarget(outDir + "/" + "otu_table_ampvis2.txt"),
-				'out3': luigi.LocalTarget(outDir + "/" + "otu_table_phyloseq.txt"),
-				'out4': luigi.LocalTarget(outDir + "/" + "otu_table_phyloseq.biom"),
-				'out5': luigi.LocalTarget(graphlan_folder + "/" + "hclust_abundance_heatmap_species.png")}
+				'out2': luigi.LocalTarget(outDir + "/" + "otu_table_ampvis2.txt")
+				}
 				
 				#'out6': luigi.LocalTarget(graphlan_folder + "/" + "graphlan_merged_abundance.pdf")}
 
@@ -295,7 +293,7 @@ class graphlan(luigi.Task):
 		print("****NOW RUNNING COMMAND****:" + cmd_run_hclust2)
 		print(run_cmd(cmd_run_hclust2))
 
-		subprocess.run('conda activate graphlan', shell=True)
+		#subprocess.run('conda activate graphlan', shell=True)
 		
 		print("****NOW RUNNING COMMAND****:" + cmd_run_graphlan_prep)
 		print(run_cmd(cmd_run_graphlan_prep))
@@ -316,34 +314,27 @@ class profileTaxonomy(luigi.Task):
 	pre_process_reads = luigi.ChoiceParameter(choices=["yes", "no"], var_type=str)
 	read_library_type = GlobalParameter().seq_platforms
 	condition_column=luigi.Parameter(default="conditions")
-	reference_condition=luigi.Parameter()
-	alpha=luigi.FloatParameter(default=0.05)
-
+	
 
 	def requires(self):
 		return [graphlan(pre_process_reads=self.pre_process_reads)]
 
 	def output(self):
-		phyloseq_image_folder = os.path.join(os.getcwd(), GlobalParameter().projectName, "metaphlan_analysis" ,"figures" + "/")
-		return {'out1': luigi.LocalTarget(phyloseq_image_folder + "/" + "volcano_plot_FC_2_P_05.tiff.tiff")}
+		ampvis_image_folder = os.path.join(os.getcwd(), GlobalParameter().projectName, "metaphlan_analysis" ,"figures" + "/")
+		return {'out1': luigi.LocalTarget(ampvis_image_folder + "/" + "family_heatmap.tiff")}
 
 
 	def run(self):
-		phyloseq_folder = os.path.join(os.getcwd(), GlobalParameter().projectName, "metaphlan_analysis" + "/")
+		ampvis_folder = os.path.join(os.getcwd(), GlobalParameter().projectName, "metaphlan_analysis" + "/")
 		inDir=os.path.join(os.getcwd(), GlobalParameter().projectName, "metaphlan_analysis" ,"data_for_images" + "/")
 		map_file=os.path.join(os.getcwd(), "config","metagenome_condition.tsv")
 
-		cmd_run_phyloseq="[ -d {phyloseq_folder} ] || mkdir -p {phyloseq_folder} ;  cd {phyloseq_folder} ;" \
-						"phyloseq.r -t {map_file} " \
-						"-P {inDir}/otu_table_phyloseq.biom " \
+		cmd_run_ampvis="[ -d {ampvis_folder} ] || mkdir -p {ampvis_folder} ;  cd {ampvis_folder} ;" \
+						"ampvis.r -t {map_file} " \
 						"-v {condition_column} " \
-						"-c {reference_condition} " \
-						"-a {alpha} " \
-						"-A {inDir}/otu_table_ampvis2.txt".format(map_file=map_file,
+						"-a {inDir}/otu_table_ampvis2.txt".format(map_file=map_file,
 																 inDir=inDir,
-																 alpha=self.alpha,
-																 reference_condition=self.reference_condition,
-																 phyloseq_folder=phyloseq_folder,
+																 ampvis_folder=ampvis_folder,
 																 condition_column=self.condition_column)
-		print("****NOW RUNNING COMMAND****:" + cmd_run_phyloseq)
-		print(run_cmd(cmd_run_phyloseq))
+		print("****NOW RUNNING COMMAND****:" + cmd_run_ampvis)
+		print(run_cmd(cmd_run_ampvis))
