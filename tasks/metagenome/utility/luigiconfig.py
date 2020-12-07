@@ -10,6 +10,7 @@ import subprocess
 import pandas as pd
 import luigi
 
+
 def run_cmd(cmd):
 	p = subprocess.Popen(cmd, bufsize=-1,
 				 shell=True,
@@ -35,12 +36,12 @@ maxMemory= int((mem.available/1073741824) -1)
 
 class configureProject(luigi.Task):
 	
-	cpus = luigi.Parameter(default=f'{threads}')
-	maxMemory=luigi.Parameter(default=f'{maxMemory}')
-	domain=luigi.Parameter(description="domain of the organism")
-	dataDir=luigi.Parameter(description="Path to FASTQ Data DIrectory")
-	projectName=luigi.Parameter()
-	schedulerPort=luigi.Parameter(default="8082")
+	cpus = luigi.Parameter(default=f'{threads}',description="Number of Threads. [default: number of CPU-1]")
+	maxMemory=luigi.Parameter(default=f'{maxMemory}',description="Maximum Memory in GB. [default: Available Memory in GB -1]")
+	domain=luigi.Parameter(description="Domain of the organism")
+	inputDir=luigi.Parameter(description="Path to the raw illumina FASTQ Data Directory")
+	projectName=luigi.Parameter(default="metagenome_project",description="Name of the folder (gaps and special characters not allowed)in which Analysis Results will be stored")
+	schedulerPort=luigi.Parameter(default="8082", description="Scheduler Port Number [default: 8082]")
 	userEmail=luigi.Parameter(description="Your email")
 	symLinkDir=luigi.Parameter(default="symLinkDir",description="Symbolic Link Directory Name")
 	
@@ -59,7 +60,7 @@ class configureProject(luigi.Task):
 		ont_read_dir=os.path.abspath(os.path.join(os.path.join(os.getcwd()),self.symLinkDir,"ont"))
 		projectDir=os.path.abspath(os.path.join(os.path.join(os.getcwd()),self.projectName))
 
-		dataDir=os.path.abspath(os.path.join(os.path.join(os.getcwd()),self.dataDir))
+		inputDir=os.path.abspath(os.path.join(os.path.join(os.getcwd()),self.inputDir))
 
 		symLinkDir=os.path.abspath(os.path.join(os.path.join(os.getcwd()),self.symLinkDir))
 
@@ -69,8 +70,8 @@ class configureProject(luigi.Task):
 		createFolder(projectDir)
 		createFolder("config")
 
-		if os.path.isdir(dataDir):
-			files = [f for f in os.listdir(dataDir) if os.path.isfile(os.path.join(dataDir, f))]
+		if os.path.isdir(inputDir):
+			files = [f for f in os.listdir(inputDir) if os.path.isfile(os.path.join(inputDir, f))]
 			keys = []
 			fileList = re.compile(r'^(.+?).(fastq|fq|fastq\.gz|fq\.gz)?$')
 			for file in files:
@@ -100,7 +101,7 @@ class configureProject(luigi.Task):
 		##ln -nsf method
 		for key, val in dicts.items():
 			dest = (os.path.join(symLinkDir,val,key))
-			src = (os.path.join(dataDir,key))
+			src = (os.path.join(inputDir,key))
 			source = os.path.abspath(src)
 			destination = os.path.abspath(dest)
 			escape="\'"
