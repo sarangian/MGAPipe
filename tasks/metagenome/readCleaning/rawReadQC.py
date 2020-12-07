@@ -11,8 +11,7 @@ class GlobalParameter(luigi.Config):
 	pac_read_suffix=luigi.Parameter()
 	ont_read_suffix=luigi.Parameter()
 	projectName=luigi.Parameter()
-	#seq_platforms=luigi.Parameter()
-
+	seq_platforms=luigi.Parameter()
 	threads = luigi.Parameter()
 	maxMemory = luigi.Parameter()
 	
@@ -41,11 +40,9 @@ class readqc(luigi.Task):
 	pacbio_read_dir = GlobalParameter().pac_read_dir
 
 	paired_end_read_suffix = GlobalParameter().pe_read_suffix
-	nanopore_read_suffix = GlobalParameter().ont_read_suffix
-	pacbio_read_suffix = GlobalParameter().pac_read_suffix
-
-	seq_platforms = luigi.ChoiceParameter(description="Choose From['pe: paired-end',pe-ont: paired-end and nanopore, pe-pac: paired-end and pacbio, ont: nanopore, pac: pacbio]",
-                                             choices=["pe", "pe-ont", "pe-pac","ont","pac"], var_type=str)
+	ont_read_suffix = GlobalParameter().ont_read_suffix
+	pac_read_suffix = GlobalParameter().pac_read_suffix
+	seq_platforms = GlobalParameter().seq_platforms
 
 	threads = GlobalParameter().threads
 	maxMemory = GlobalParameter().maxMemory
@@ -114,6 +111,7 @@ class readqc(luigi.Task):
 						"2>&1 | tee  {read_QC_log_folder}{sampleName}_ont_nanoqc.log".format(sampleName=self.sampleName,
 													   ont_readQC_folder=ont_readQC_folder,
 													   ont_read_suffix=self.ont_read_suffix,
+													   read_QC_log_folder=read_QC_log_folder,
 													   ont_read_dir=GlobalParameter().ont_read_dir)		
 
 		cmd_raw_pac_qc = "[ -d  {pac_readQC_folder} ] || mkdir -p {pac_readQC_folder};  mkdir -p {read_QC_log_folder}; " \
@@ -122,6 +120,7 @@ class readqc(luigi.Task):
 						"2>&1 | tee  {read_QC_log_folder}{sampleName}_pac_nanoqc.log".format(sampleName=self.sampleName,
 													   pac_readQC_folder=pac_readQC_folder,
 													   pac_read_suffix=self.pac_read_suffix,
+													   read_QC_log_folder=read_QC_log_folder,
 													   pac_read_dir=GlobalParameter().pac_read_dir)					
 
 		cmd_mv_ont_qc = "cd {ont_readQC_folder};  " \
@@ -174,24 +173,23 @@ class readqc(luigi.Task):
 
 
 class rawReadsQC(luigi.Task):
-	seq_platforms = luigi.ChoiceParameter(description="Choose From['pe: paired-end','pe-mp: paired-end and mate-pair',pe-ont: paired-end and nanopore, pe-pac: paired-end and pacbio, ont: nanopore, pac: pacbio]",
-                                             choices=["pe", "mp","pe-mp", "pe-ont", "pe-pac","ont","pac"], var_type=str)
+	seq_platforms = GlobalParameter().seq_platforms
 
 	def requires(self):
 
 		if self.seq_platforms == "pe":
-			return [readqc(seq_platforms=self.seq_platforms,
+			return [readqc(
 						sampleName=i)
 					for i in [line.strip()
 							  for line in
-							  open((os.path.join(os.getcwd(), "sample_list", "pe_samples.lst")))]]
+							  open((os.path.join(os.getcwd(), "config", "pe_samples.lst")))]]
 
 		if self.seq_platforms == "ont":
 			return [readqc(seq_platforms=self.seq_platforms,
 						sampleName=i)
 					for i in [line.strip()
 							  for line in
-							  open((os.path.join(os.getcwd(), "sample_list", "ont_samples.lst")))]]
+							  open((os.path.join(os.getcwd(), "config", "ont_samples.lst")))]]
 
 
 		if self.seq_platforms == "mp":
@@ -199,7 +197,7 @@ class rawReadsQC(luigi.Task):
 						   sampleName=i)
 					for i in [line.strip()
 							  for line in
-							  open((os.path.join(os.getcwd(),"sample_list", "mp_samples.lst")))]]
+							  open((os.path.join(os.getcwd(),"config", "mp_samples.lst")))]]
 
 
 		if self.seq_platforms == "pe-mp":
@@ -208,12 +206,12 @@ class rawReadsQC(luigi.Task):
 						[readqc(seq_platforms="pe",sampleName=i)
 								for i in [line.strip()
 										  for line in
-												open((os.path.join(os.getcwd(), "sample_list","pe_samples.lst")))]],
+												open((os.path.join(os.getcwd(), "config","pe_samples.lst")))]],
 
 						[readqc(seq_platforms="mp", sampleName=i)
 								for i in [line.strip()
 										  for line in
-												open((os.path.join(os.getcwd(), "sample_list","mp_samples.lst")))]]
+												open((os.path.join(os.getcwd(), "config","mp_samples.lst")))]]
 				  ]
 
 
@@ -223,12 +221,12 @@ class rawReadsQC(luigi.Task):
 						[readqc(seq_platforms="pe",sampleName=i)
 								for i in [line.strip()
 										  for line in
-												open((os.path.join(os.getcwd(), "sample_list","pe_samples.lst")))]],
+												open((os.path.join(os.getcwd(), "config","pe_samples.lst")))]],
 
 						[readqc(seq_platforms="lr", sampleName=i)
 								for i in [line.strip()
 										  for line in
-												open((os.path.join(os.getcwd(), "sample_list","ont_samples.lst")))]]
+												open((os.path.join(os.getcwd(), "config","ont_samples.lst")))]]
 				  ]
 
 
@@ -238,12 +236,12 @@ class rawReadsQC(luigi.Task):
 						[readqc(seq_platforms="pe",sampleName=i)
 								for i in [line.strip()
 										  for line in
-												open((os.path.join(os.getcwd(), "sample_list","pe_samples.lst")))]],
+												open((os.path.join(os.getcwd(), "config","pe_samples.lst")))]],
 
 						[readqc(seq_platforms="lr", sampleName=i)
 								for i in [line.strip()
 										  for line in
-												open((os.path.join(os.getcwd(), "sample_list","pac_samples.lst")))]]
+												open((os.path.join(os.getcwd(), "config","pac_samples.lst")))]]
 					]
 		
 
