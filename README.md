@@ -25,13 +25,13 @@ The script to run Metagenome Analysis Pipeline is metagenome.py is available ins
 Input Files
 ===========
 
-Raw RNASeq Reads
+Raw Illumina paired-end Reads
 ----------------
 
   The raw ilumina reads in FASTQ format must be placed inside a folder with read permission
   Allowed ``extension`` for FASTQ reads: ``fq`` , ``fq.gz`` , ``fastq``, ``fastq.gz``
  
-   For **paired-end** RNAseq reads, sample name must be suffixed with _R1. ``extension`` and _R2. ``extension`` for forward and reverse reads respectively
+   For illimina paired-end reads, sample name must be suffixed with _R1. ``extension`` and _R2. ``extension`` for forward and reverse reads respectively
 
           *Example*
 
